@@ -1,0 +1,64 @@
+---
+## ensure the wheel group exsts and functions properly
+
+- name: Ensure the wheel group exists
+  group:
+    name: "{{ privilege_group }}"
+    state: present
+
+- name: Ensure users in the wheel group can elevate privileges with sudo
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: '^%{{ privilege_group }}' # substitute the line matching the regex if present, otherwise add 
+    line: '%{{ privilege_group }} ALL=(ALL) ALL'
+    validate: 'visudo -cf %s'
+
+## deal with privileged users
+
+- name: Ensure ansible user can sudo without a password
+  lineinfile:
+    path: /etc/sudoers
+    insertafter: '^%{{ privilege_group }} ALL=(ALL) ALL' # insert after the privileged group line
+    line: 'ansible ALL=(ALL) NOPASSWD: ALL'
+    validate: 'visudo -cf %s'
+
+- name: Ensure all privileged users are in the wheel group
+  user:
+    name: "{{ item }}"
+    state: present
+    groups: "{{ privilege_group }}"
+    append: true                     # only append the user to a given group, not substitute
+  loop: "{{ privileged_users }}"
+  when: item not in ignore_users
+
+## remove non-privileged users from wheel
+
+- name: Get current members of the wheel group
+  getent:
+    database: group
+    key:  "{{ privilege_group }}"
+
+- name: Parse current wheel group members
+  set_fact:
+    current_privilege_group_members: "{{ ansible_facts.getent_group[privilege_group][2].split(',') | default([]) }}"
+
+- name: Display current wheel group members
+  debug:
+    var: current_privilege_group_members
+
+- name: Remove users not in privileged_users from the wheel group
+  command: "gpasswd -d {{ item }} {{ privilege_group }}"
+  loop: "{{ current_privilege_group_members }}"
+  when: item is not in privileged_users
+
+- name: Display information about users
+  debug:
+    var: ansible_facts.getent_passwd.keys()
+  when: display.display_users == true
+
+
+
+
+
+

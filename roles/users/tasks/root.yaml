@@ -1,0 +1,35 @@
+---
+- name: Initialize root users list
+  set_fact:
+    root_users_list: []
+    root_home_list: []
+
+- name: Find the root user and the root user home directory
+  set_fact:
+    root_users_list: "{{ root_users_list + [ item ] }}"
+    root_home_list: '{{ root_home_list + [ ansible_facts.getent_passwd[item][4] ] }}' 
+  loop: '{{ found_system_users }}'
+  when: ansible_facts.getent_passwd[item][1] == 0 # compare UID with 0
+
+- name: Display found information
+  debug:
+    msg: 
+      - "Root usernames: {{ root_users_list }}" 
+      - "Root home directories: {{ root_home_list }}"
+  
+- name: Remove additional root users
+  user:
+    name: "{{ item }}"
+    state: absent
+  loop: "{{ root_users_list }}"
+  when: 
+    - item is not "root"
+    - item is not in ignore_users
+
+- name: Remove additional root user directories
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop: "{{ root_home_list }}"
+  when: item is not "/root"
+

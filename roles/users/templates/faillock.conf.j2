@@ -1,0 +1,6 @@
+# /etc/security/faillock.conf
+unlock_time = {{ password_lockout.unlock_time }}
+fail_interval = {{ password_lockout.fail_interval }}
+deny = {{ password_lockout.deny }}
+even_deny_root
+dir = {{ password_lockout.lockout_directory }}

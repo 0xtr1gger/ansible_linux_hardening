@@ -1,0 +1,19 @@
+---
+- name: Ensure all specified regular users exist and have the specified default shell
+  user:
+    name: "{{ item }}"
+    state: present
+    create_home: true
+    shell: "{{ default_shell }}"
+  loop: "{{ regular_users + privileged_users }}" # loop through two lists
+
+
+- name: Ensure no users except specified ones exist
+  user:
+    name: "{{ item }}"
+    state: absent
+  loop: "{{ found_regular_users }}"
+  when: 
+    - item not in regular_users
+    - item not in privileged_users
+    - item not in ignore_users

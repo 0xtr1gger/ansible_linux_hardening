@@ -1,0 +1,66 @@
+#SPDX-License-Identifier: MIT-0
+---
+# defaults file for users
+
+## extract_users.yaml
+
+display:
+  display_users: false
+  display_regular_users: true
+  display_system_users: false
+
+
+## users
+
+# list of regular users
+regular_users:
+  - alice
+  - jane
+  - john
+
+# users to ignore
+ignore_users:
+  - ansible
+
+# list of users that should have privileges
+privileged_users:
+  - jane
+
+# guest users can not change their passwords
+guest_users:
+  - alice
+
+default_shell: "/bin/bash"  # default shell for new users
+privilege_group: wheel
+lock_root: true
+
+## passwords
+
+PAM_pwquality_package: "libpam-pwquality" # Ubuntu/Debian, Arch/Manjaro
+
+# PAM_pwquality_package: "libpwquality"     # RedHat/CentOS
+
+PAM_pwquality_filepath: "/etc/pam.d/common-password" # Ubuntu/Debian, Arch/Manjaro
+# PAM_pwquality_filepath: "/etc/pam.d/"
+
+password_quality: true           # configure password quality rules?
+bruteforce_protection: true      # configure brute-force password protection?
+
+password_lockout:
+  deny: 5             # number of failed password attempts before password lock
+  unlock_time: 900    # unlock time after failed password attempts
+  fail_interval: 900  # the time in which failed logins can cause a lockout
+  lockout_directory: "/var/lib/faillock" # where the lockout records are stored
+  PAM_config: "/etc/pam.d/common-auth"   # ensures faillock rules are enforced
+
+password_expiration: true
+
+password_expiration_data:
+  expire_min: 5
+  expire_max: 180
+  expire_warn: 5
+  expire_account_disable: 5
+
+## password policy
+password_complexity:
+  min_length: 10

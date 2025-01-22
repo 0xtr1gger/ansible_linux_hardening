@@ -1,0 +1,37 @@
+---
+- name: Get user infromation from /etc/passwd
+  getent:
+    database: passwd
+
+- name: Display information about users
+  debug:
+    var: ansible_facts.getent_passwd.keys()
+  when: display.display_users == true
+
+- set_fact:
+    found_regular_users: [] # declare an empty list to hold usernames of regular users
+
+- name: Save found regular users (UID > 999) to the found_regular_users
+  set_fact:
+    found_regular_users: '{{ found_regular_users + [ username ] }}'
+  loop: '{{ ansible_facts.getent_passwd.keys() }}'
+  loop_control: 
+    loop_var: username
+  when: (ansible_facts.getent_passwd[username][1] | int > 999) and (ansible_facts.getent_passwd[username][1] | int < 65534)
+
+- name: Display found regular users
+  debug:
+    msg: "Found regular users: {{ found_regular_users }}"
+  when: display.display_regular_users == true
+
+- set_fact:
+    found_system_users: [] # declare an empty list to hold usernames of system users
+
+- name: Save found system users (UID < 1000) to the found_regular_users
+  set_fact:
+    found_system_users: '{{  ansible_facts.getent_passwd.keys() | difference(found_regular_users) }}'
+
+- name: Display found system users
+  debug:
+    msg: "Found regular users: {{ found_system_users }}"
+  when: display.display_system_users == true

@@ -1,0 +1,35 @@
+--- 
+- name: Extract and display users on the system
+  import_tasks:
+    file: extract_users.yaml
+
+- name: Ensure only specified users exist and have appropriate privileges
+  import_tasks:
+    file: users_exist.yaml
+
+- name: Ensure privileged users are added to the wheel (or similar) group and can elevate privileges
+  import_tasks:
+    file: privileged_users.yaml
+
+- name: Remove shell and lock passpord for system users
+  import_tasks:
+    file: system_users.yaml
+
+- name: Secure the root
+  import_tasks:
+    file: root.yaml
+
+- name: Set password expiry
+  import_tasks:
+    file: password_expiry.yaml
+  when: password_expiration == true
+
+- name: Ensure strong password policy (PAM)
+  import_tasks:
+    file: password_quality.yaml
+  when: password_quality == true
+
+- name: Enforce password brute-force frotection with faillock (PAM)
+  import_tasks:
+    file: password_lockout.yaml
+  when: bruteforce_protection == true

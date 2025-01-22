@@ -1,0 +1,10 @@
+---
+- name: Remove shell from system users and lock their passwords
+  user:
+    name: "{{ item }}"
+    state: present
+    shell: "/usr/bin/nologin"
+    password_lock: true
+    create_home: false
+  loop: "{{ found_system_users }}"
+  when: item != "root"
